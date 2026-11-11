@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:broad_app/pages/auth_and_signup/landing_page.dart';
@@ -9,6 +10,19 @@ import 'package:broad_app/providers/auth_provider.dart';
 import 'package:broad_app/themes/app_theme.dart';
 
 void main() {
+  // Catch all Flutter framework errors (including GoogleMap widget errors)
+  // and log them without crashing the app.
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    // Don't rethrow — prevents GMS/rendering errors from killing the process.
+  };
+
+  // Catch all Dart async errors that escape the Flutter framework.
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('[PlatformDispatcher] Unhandled error: $error');
+    return true; // returning true means "handled — don't crash"
+  };
+
   runApp(const ProviderScope(child: MyApp()));
 }
 

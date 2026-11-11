@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../components/location_search_sheet.dart';
 import '../../components/trip_details.dart';
 import '../../themes/app_theme.dart';
 import 'rides_list_page.dart';
 
-class SearchPage extends StatefulWidget {
+class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
 
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  ConsumerState<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends ConsumerState<SearchPage> {
   String? _from;
+  double? _fromLat;
+  double? _fromLng;
+
   String? _to;
+  double? _toLat;
+  double? _toLng;
+
   DateTime _dateTime = DateTime.now();
   int _passengers = 1;
 
@@ -35,57 +43,25 @@ class _SearchPageState extends State<SearchPage> {
       '$_passengers Passenger${_passengers > 1 ? 's' : ''}';
 
   // ---- Pickers ------------------------------------------------------------
+
+  /// Opens the live autocomplete location search sheet.
   Future<void> _pickLocation({required bool isFrom}) async {
-    final controller = TextEditingController(text: isFrom ? _from : _to);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.background,
-        title: Text(
-          isFrom ? 'Start location' : 'Destination',
-          style: const TextStyle(
-            fontFamily: 'monospace',
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: const TextStyle(
-            fontFamily: 'monospace',
-            color: AppColors.primary,
-          ),
-          decoration: InputDecoration(
-            hintText: 'Enter a place',
-            hintStyle: const TextStyle(
-              color: AppColors.secondaryText,
-              fontFamily: 'monospace',
-            ),
-            filled: true,
-            fillColor: AppColors.card,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+    final result = await showLocationSearchSheet(
+      context,
+      title: isFrom ? 'Start location' : 'Destination',
     );
-    if (result == null || result.isEmpty) return;
-    setState(() => isFrom ? _from = result : _to = result);
+    if (result == null) return;
+    setState(() {
+      if (isFrom) {
+        _from = result.displayName;
+        _fromLat = result.lat;
+        _fromLng = result.lng;
+      } else {
+        _to = result.displayName;
+        _toLat = result.lat;
+        _toLng = result.lng;
+      }
+    });
   }
 
   Future<void> _pickDateTime() async {
